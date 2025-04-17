@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% if current_user.is_authenticated %}
+    <title>{{ current_user.username }}'s Habit Tracker</title>
+    {% else %}
+    <title>Habit Tracker</title>
+    {% endif %}
+</head>
+<body>
+    <h2>Hi, {{ current_user.name }}!</h2>
+    <nav>
+        <ul>
+            <li>Today</li>
+            <li>Weekly</li>
+            <li>To Do</li>
+            <li>Stats</li>
+        </ul>
+    </nav>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+          {% for message in messages %}
+            <span style="color: dodgerblue;">{{ message }}</span>
+          {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %} {% endblock %}
+</body>
+</html>
