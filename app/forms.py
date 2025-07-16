@@ -1,14 +1,14 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
+from wtforms.validators import DataRequired, Email, EqualTo, Length, InputRequired
 
 
 class SignupForm(FlaskForm):
-    name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=50)])
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=5, max=16)])
-    password_conf = PasswordField('Password Confirmation', validators=[DataRequired(), EqualTo('password')])
+    name = StringField('Full Name', validators=[InputRequired(), Length(min=2, max=50)])
+    username = StringField('Username', validators=[InputRequired()])
+    email = StringField('Email', validators=[InputRequired(), Email()])
+    password = PasswordField('Password', validators=[InputRequired(), Length(min=5, max=16)])
+    password_conf = PasswordField('Password Confirmation', validators=[InputRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Sign Up')
 
 class LoginForm(FlaskForm):
@@ -20,3 +20,8 @@ class LoginForm(FlaskForm):
 class AddHabitForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     submit = SubmitField('Add Habit')
+
+class EditHabitForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    completed = BooleanField('Completed')
+    submit = SubmitField('Save Changes')

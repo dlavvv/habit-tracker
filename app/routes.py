@@ -1,9 +1,11 @@
-from flask import render_template, flash, redirect, url_for
+from datetime import datetime
+
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_required, logout_user, login_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import app, db
-from app.forms import LoginForm, SignupForm, AddHabitForm
+from app.forms import LoginForm, SignupForm, AddHabitForm, EditHabitForm
 from app.models import Habits, Tasks, Lists, Users
 
 
@@ -13,6 +15,13 @@ from app.models import Habits, Tasks, Lists, Users
 def home():
     return render_template("home.html")
 
+
+# HABITS
+@app.route('/habits')
+@login_required
+def view_habits():
+    all_habits = db.session.scalars(db.select(Habits).filter_by(user_id=current_user.id)).all()
+    return render_template("habits.html", all_habits=all_habits)
 
 @app.route('/addhabit', methods=['GET', 'POST'])
 @login_required
@@ -31,6 +40,39 @@ def add_habit():
         return redirect(url_for('home'))
     return render_template('addhabit.html', form=form)
 
+@app.route('/edithabit/<int:habit_id>', methods=['GET', 'POST'])
+@login_required
+def edit_habit(habit_id):
+    habit = Habits.query.filter_by(id=habit_id, user_id=current_user.id).first_or_404()
+    form = EditHabitForm()
+
+    if form.validate_on_submit():
+        habit.name = form.name.data
+        habit.completed = form.completed.data
+
+        if habit.completed:
+            habit.completion_time = datetime.now()
+        else:
+            habit.completion_time = None
+
+        db.session.commit()
+        flash('Habit successfully updated!')
+        return redirect(url_for('view_habits'))
+
+    if request.method == 'GET':
+        form.name.data = habit.name
+        form.completed.data = habit.completed
+
+    return render_template('edithabit.html', form=form)
+
+@app.route('/deletehabit/<int:habit_id>', methods=['GET', 'POST'])
+@login_required
+def del_habit(habit_id):
+    habit = Habits.query.filter_by(id=habit_id, user_id=current_user.id).first_or_404()
+    db.session.delete(habit)
+    db.session.commit()
+    flash('Habit successfully deleted!')
+    return redirect(url_for('view_habits'))
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():

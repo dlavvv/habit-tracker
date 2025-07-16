@@ -39,5 +39,10 @@
           {% endfor %}
       {% endif %}
     {% endwith %}
+    {% with errors = form.password_conf.errors %}
+        {% for error in errors %}
+            <span style="color: dodgerblue;">{{ error }}</span>
+        {% endfor %}
+    {% endwith %}
 </body>
 </html>
