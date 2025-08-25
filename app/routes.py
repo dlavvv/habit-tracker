@@ -5,7 +5,7 @@ from flask_login import current_user, login_required, logout_user, login_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import app, db
-from app.forms import LoginForm, SignupForm, AddHabitForm, EditHabitForm
+from app.forms import LoginForm, SignupForm, AddHabitForm, EditHabitForm, AddListForm, AddTaskForm, EditTaskForm
 from app.models import Habits, Tasks, Lists, Users
 
 
@@ -13,7 +13,8 @@ from app.models import Habits, Tasks, Lists, Users
 @app.route('/home')
 @login_required
 def home():
-    return render_template("home.html")
+    return render_template("app/home.html")
+
 
 
 # HABITS
@@ -21,7 +22,7 @@ def home():
 @login_required
 def view_habits():
     all_habits = db.session.scalars(db.select(Habits).filter_by(user_id=current_user.id)).all()
-    return render_template("habits.html", all_habits=all_habits)
+    return render_template("habits/habits.html", all_habits=all_habits)
 
 @app.route('/addhabit', methods=['GET', 'POST'])
 @login_required
@@ -38,7 +39,7 @@ def add_habit():
         db.session.commit()
         flash('Habit successfully added!')
         return redirect(url_for('home'))
-    return render_template('addhabit.html', form=form)
+    return render_template('habits/addhabit.html', form=form)
 
 @app.route('/edithabit/<int:habit_id>', methods=['GET', 'POST'])
 @login_required
@@ -63,7 +64,7 @@ def edit_habit(habit_id):
         form.name.data = habit.name
         form.completed.data = habit.completed
 
-    return render_template('edithabit.html', form=form)
+    return render_template('habits/edithabit.html', form=form)
 
 @app.route('/deletehabit/<int:habit_id>', methods=['GET', 'POST'])
 @login_required
@@ -74,6 +75,124 @@ def del_habit(habit_id):
     flash('Habit successfully deleted!')
     return redirect(url_for('view_habits'))
 
+
+
+# LISTS
+@app.route('/lists')
+@login_required
+def view_lists():
+    all_lists = db.session.scalars(db.select(Lists).filter_by(user_id=current_user.id)).all()
+    return render_template('lists/lists.html', all_lists=all_lists)
+
+@app.route('/addlist', methods=['GET', 'POST'])
+@login_required
+def add_list():
+    form = AddListForm()
+
+    if form.validate_on_submit():
+        new_list = Lists(
+            name=form.name.data,
+            user_id=current_user.id
+            # mai trb adaugat creation_dateime aici (sau sa pun last_modified si atunci pot actualiza si cand se face update la ea)
+        )
+        db.session.add(new_list)
+        db.session.commit()
+        flash('List succesfully added !')
+        return redirect(url_for('home'))
+    return render_template('lists/addlist.html', form=form)
+
+@app.route('/openlist/<int:list_id>', methods=['GET'])
+@login_required
+def open_list(list_id):
+    # current_list e intreg obiectul Lista cu id-ul selectat de noi, deci contine toate informatiile acelei liste
+    current_list = Lists.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+
+    list_name = current_list.name
+
+    return render_template('lists/openlist.html', list_name=list_name, current_list=current_list)
+
+@app.route('/editlist/<int:list_id>', methods=['GET','POST'])
+@login_required
+def edit_list(list_id):
+    current_list = Lists.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    form = EditHabitForm()
+
+    # daca editam lista si apasam 'save changes' care trimite formularul
+    if form.validate_on_submit():
+        current_list.name = form.name.data
+
+        db.session.commit()
+        flash('List updated succesfully !')
+
+        return redirect(url_for('view_lists'))
+
+    form.name.data = current_list.name
+
+    return render_template('lists/editlist.html', form=form)
+
+@app.route('/deletelist/<int:list_id>', methods=['GET','POST'])
+@login_required
+def del_list(list_id):
+    current_list = Lists.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    db.session.delete(current_list)
+    db.session.commit()
+    flash('List succesfully deleted !')
+    return redirect(url_for('view_lists'))
+
+
+
+# TASKS
+@app.route('/tasks', methods=['GET', 'POST'])
+@login_required
+def view_tasks():
+    all_tasks = db.session.scalars(db.select(Tasks).filter_by(user_id=current_user.id)).all()
+    return render_template("tasks/view_tasks.html", all_tasks=all_tasks)
+
+@app.route('/addtask/<int:list_id>', methods=['GET', 'POST'])
+@login_required
+def add_task(list_id):
+    form = AddTaskForm()
+
+    if form.validate_on_submit():
+        new_task = Tasks(
+            description = form.description.data,
+            completed = form.completed.data,
+            completion_time = None,
+            list_id = list_id, # e trimis din html folosind butonul de + care apeleaza /addtask
+            user_id = current_user.id
+        )
+
+        db.session.add(new_task)
+        db.session.commit()
+        flash('Task added succesfully !')
+        return redirect(url_for('home')) # momentan home
+
+    return render_template("tasks/addtask.html", form=form)
+
+@app.route('/edittask/<int:task_id>', methods=['GET', 'POST'])
+@login_required
+def edit_task(task_id):
+    task = Tasks.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()
+    form = EditTaskForm()
+
+    # daca dam submit pt a salva schimbarile
+    if form.validate_on_submit():
+        task.description = form.description.data
+        task.completed = form.completed.data
+
+        db.session.commit()
+        flash('Task updated succesfully !')
+
+        return redirect(url_for('home'))
+
+    form.description.data = task.description
+    form.completed.data = task.completed
+
+    return render_template("tasks/edittask.html", form=form)
+
+
+
+# LOGIN
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
@@ -99,7 +218,7 @@ def signup():
         db.session.commit()
         flash('Sign up successful.')
         return redirect(url_for('home'))
-    return render_template('signup.html', title='Sign up', form=form)
+    return render_template('app/signup.html', title='Sign up', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -115,7 +234,7 @@ def login():
             return redirect(url_for('home'))
         else:
             flash('Login failed. Check your username and password and try again.')
-    return render_template('login.html', title='Log in', form=form)
+    return render_template('app/login.html', title='Log in', form=form)
 
 @app.route('/logout')
 @login_required

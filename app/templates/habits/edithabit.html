@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Habit</title>
+</head>
+<body>
+  <form action="" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.name.label }}<br>
+        {{ form.name(size=30) }}
+    </p>
+    <p>
+        {{ form.completed.label }}
+        {{ form.completed() }}
+    </p>
+      <p>{{ form.submit() }}</p>
+  </form>
+</body>
+</html>

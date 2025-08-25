@@ -18,6 +18,7 @@ class Habits(db.Model):
 class Lists(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    # creation_datetime = db.Column(db.DateTime, nullable=False) # o pun manual in db
     user_id = db.Column(db.Integer, db.ForeignKey(Users.id), nullable=False)
 
 class Tasks(db.Model):

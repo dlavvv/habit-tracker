@@ -1,3 +1,4 @@
 FLASK_APP=habit-tracker.py
 FLASK_ENV=development
 FLASK_DEBUG=1
+PYTHONUNBUFFERED=0

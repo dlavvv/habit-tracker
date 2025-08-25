@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+    <button type="button" onclick="window.location.href='/logout'">Log Out</button>
+</div>
+<br>
+<div>
+    <button type="button" onclick="window.location.href='/addhabit'">New Habit</button>
+    <button type="button" onclick="window.location.href='/habits'">View All Habits</button>
+</div>
+<br>
+<div>
+    <button type="button" onclick="window.location.href='/addlist'">New List</button>
+    <button type="button" onclick="window.location.href='/lists'">View All Lists</button>
+</div>
+<br>
+<div>
+    <button type="button" onclick="window.location.href='/addtask'">New Task</button>
+</div>
+
+{% endblock %}

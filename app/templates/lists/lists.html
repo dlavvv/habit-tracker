@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+    {% for list in all_lists %}
+    <li>{{ list.name }}
+        <button type="button" onclick="window.location.href='/openlist/{{ list.id }}'">Open</button>
+        <button type="button" onclick="window.location.href='/editlist/{{ list.id }}'">Edit</button>
+        <button type="button" onclick="window.location.href='/deletelist/{{ list.id }}'">Delete</button>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
