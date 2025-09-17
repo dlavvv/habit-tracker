@@ -92,8 +92,8 @@ def add_list():
     if form.validate_on_submit():
         new_list = Lists(
             name=form.name.data,
-            user_id=current_user.id
-            # mai trb adaugat creation_dateime aici (sau sa pun last_modified si atunci pot actualiza si cand se face update la ea)
+            user_id=current_user.id,
+            last_modified=datetime.now()
         )
         db.session.add(new_list)
         db.session.commit()
@@ -108,8 +108,9 @@ def open_list(list_id):
     current_list = Lists.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
 
     list_name = current_list.name
+    tasks = Tasks.query.filter_by(list_id=list_id, user_id=current_user.id).all()
 
-    return render_template('lists/openlist.html', list_name=list_name, current_list=current_list)
+    return render_template('lists/openlist.html', list_name=list_name, current_list=current_list, tasks=tasks)
 
 @app.route('/editlist/<int:list_id>', methods=['GET','POST'])
 @login_required
@@ -119,6 +120,9 @@ def edit_list(list_id):
 
     # daca editam lista si apasam 'save changes' care trimite formularul
     if form.validate_on_submit():
+        if current_list.name != form.name.data:
+            current_list.last_modified = datetime.now()
+
         current_list.name = form.name.data
 
         db.session.commit()
@@ -146,7 +150,7 @@ def del_list(list_id):
 @login_required
 def view_tasks():
     all_tasks = db.session.scalars(db.select(Tasks).filter_by(user_id=current_user.id)).all()
-    return render_template("tasks/view_tasks.html", all_tasks=all_tasks)
+    return render_template("tasks/tasks.html", all_tasks=all_tasks)
 
 @app.route('/addtask/<int:list_id>', methods=['GET', 'POST'])
 @login_required

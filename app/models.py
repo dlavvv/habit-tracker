@@ -18,8 +18,9 @@ class Habits(db.Model):
 class Lists(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    # creation_datetime = db.Column(db.DateTime, nullable=False) # o pun manual in db
+    last_modified = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(Users.id), nullable=False)
+    tasks = db.relationship('Tasks', back_populates='list', cascade='all, delete')
 
 class Tasks(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +28,6 @@ class Tasks(db.Model):
     completed = db.Column(db.Boolean, default=False)
     completion_time = db.Column(db.DateTime, nullable=True)
     list_id = db.Column(db.Integer, db.ForeignKey(Lists.id), nullable=False)
-    list = db.relationship(Lists, backref='tasks') # to be able to access all tasks in a list without extra code
+    list = db.relationship(Lists, back_populates='tasks') # to be able to access all tasks in a list without extra code
     user_id = db.Column(db.Integer, db.ForeignKey(Users.id), nullable=False)
 

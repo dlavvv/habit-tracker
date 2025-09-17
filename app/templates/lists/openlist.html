@@ -6,9 +6,12 @@
 </head>
 <body>
     <h1>{{ list_name }}</h1>
+    <h5> Last modified: {{ current_list.last_modified }}</h5>
     <ul>
         {% for task in tasks %}
-        <li>{{ task.name }}</li>
+        <li>{{ task.description }}</li>
+        <button type="button" onclick="window.location.href='/edittask/{{ task.id }}'"> Edit </button>
+        <button type="button" onclick="window.location.href='/deletetask/{{ task.id }}'"> Delete </button>
         {% endfor %}
     </ul>
     <button type="button" onclick="window.location.href='/addtask/{{ current_list.id }}'"> + </button>
