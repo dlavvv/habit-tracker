@@ -8,7 +8,9 @@
     <h1>All Tasks</h1>
     <ul>
         {% for task in all_tasks %}
-        <li> {{ task.description }} - {{ task.list.name }}</li>
+        <li>
+            {{ task.description }} - {{ task.list.name }}
+        </li>
         {% endfor %}
     </ul>
 </body>

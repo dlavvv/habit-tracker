@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import current_user, login_required, logout_user, login_user
@@ -166,10 +167,12 @@ def add_task(list_id):
             user_id = current_user.id
         )
 
+        task_list_id = list_id
+
         db.session.add(new_task)
         db.session.commit()
         flash('Task added succesfully !')
-        return redirect(url_for('home')) # momentan home
+        return redirect(url_for('open_list', list_id=task_list_id))
 
     return render_template("tasks/addtask.html", form=form)
 
@@ -184,6 +187,11 @@ def edit_task(task_id):
         task.description = form.description.data
         task.completed = form.completed.data
 
+        if task.completed:
+            task.completion_time = datetime.now()
+        else:
+            task.completion_time = None
+
         db.session.commit()
         flash('Task updated succesfully !')
 
@@ -192,24 +200,46 @@ def edit_task(task_id):
     form.description.data = task.description
     form.completed.data = task.completed
 
-    return render_template("tasks/edittask.html", form=form)
+    return render_template("tasks/edittask.html", form=form, task_name=task.description)
+
+@app.route('/deletetask/<int:task_id>', methods=['GET', 'POST'])
+@login_required
+def del_task(task_id):
+    current_task = Tasks.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()
+    task_list_id = current_task.list_id
+    db.session.delete(current_task)
+    db.session.commit()
+    flash('Task successfully deleted!')
+
+    return redirect(url_for('open_list', list_id=task_list_id))
 
 
 
-# LOGIN
+# SIGNUP
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
     if form.validate_on_submit():
+
+        pw_valid = password_check(form.password.data)
+        if not pw_valid:
+            flash('Password is invalid.')
+            return redirect(url_for('signup'))
+
         name = form.name.data
         username = form.username.data
         email = form.email.data
         password = generate_password_hash(form.password.data, method='pbkdf2:sha256')
 
-        user_exists = Users.query.filter_by(email=email).first()
-        if user_exists:
+        email_exists = Users.query.filter_by(email=email).first()
+        if email_exists:
             flash('Email already registered.')
             return redirect(url_for('signup'))
+        else:
+            username_exists = Users.query.filter_by(username=username).first()
+            if username_exists:
+                flash('Username already exists. Choose another one.')
+                return redirect(url_for('signup'))
 
         new_user = Users(
             name=name,
@@ -224,6 +254,21 @@ def signup():
         return redirect(url_for('home'))
     return render_template('app/signup.html', title='Sign up', form=form)
 
+def password_check(password):
+    reg = r"^(?=.*\d)(?=.*[A-Z])(?=.*[_^$%!#]).{6,30}$"
+
+    reg_comp = re.compile(reg)
+
+    expr = re.search(reg_comp, password)
+
+    if not expr:
+        return False
+
+    return True
+
+
+
+# LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
